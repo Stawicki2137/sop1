@@ -5,7 +5,9 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <ctype.h> //tolower i takie tam
+#include <unistd.h> //getopt
 
+#define MAX_PATH 256
 #define ERR(source) (perror(source), fprintf(stderr, "%s:%d\n", __FILE__, __LINE__), exit(EXIT_FAILURE))
 
 void count_letters(const char *str, int *counts){
@@ -58,9 +60,14 @@ int check(char*name, char pattern){
     }
     return ans;
 }
+void usage(char *pname)
+{
+    fprintf(stderr, "USAGE:%s -p dirname\n", pname);
+    exit(EXIT_FAILURE);
+}
 void scan_dir()
 {
-    const char *patterns[] = {"kutas", "cip", "fiut", "siur"};
+    const char *patterns[] = {"kutas", "cip", "fiut", "siur", "chuj"};
     DIR *dirp;
     struct dirent *dp;
     struct stat filestat;
@@ -73,7 +80,7 @@ void scan_dir()
         {
             if(lstat(dp->d_name,&filestat))
             ERR("lsat");
-            if(check_subs_tab(dp->d_name,patterns,4))
+            if(check_subs_tab(dp->d_name,patterns,5))
             fprintf(stdout,"%s %ld\n", dp->d_name,filestat.st_size);
         }
     } while (dp != NULL);
@@ -87,9 +94,29 @@ void scan_dir()
 
 int main(int argc, char **argv)
 {
-    char name[20];
-    strcpy(name,".");
-    fprintf(stdout,"KATALOG:%s\nLISTA PLIKOW\n",name);
-    scan_dir();
+   // char name[20];
+   // strcpy(name,".");
+
+    char path[MAX_PATH];
+    int c;
+    while((c=getopt(argc,argv,"p:"))!=-1){
+        switch (c){
+            case 'p':
+             if((getcwd(path,MAX_PATH))==NULL)
+             ERR("getcwd");
+             if(chdir(optarg))
+            ERR("chdir");
+              fprintf(stdout,"KATALOG:%s\nLISTA PLIKOW\n",optarg);
+     scan_dir();
+     if(chdir(path))
+     ERR("chdir");
+            break;
+            case '?':
+            default:
+            usage(*(argv));
+        }
+    }
+    
+       
     return EXIT_SUCCESS;
 }
