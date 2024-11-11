@@ -63,6 +63,7 @@ void scan_dir()
     const char *patterns[] = {"kutas", "cip", "fiut", "siur"};
     DIR *dirp;
     struct dirent *dp;
+    struct stat filestat;
     if ((dirp = opendir(".")) == NULL)
         ERR("opendir");
     do
@@ -70,9 +71,10 @@ void scan_dir()
         errno = 0;
         if ((dp = readdir(dirp)) != NULL)
         {
-            
+            if(lstat(dp->d_name,&filestat))
+            ERR("lsat");
             if(check_subs_tab(dp->d_name,patterns,4))
-            fprintf(stdout,"%s\n", dp->d_name);
+            fprintf(stdout,"%s %ld\n", dp->d_name,filestat.st_size);
         }
     } while (dp != NULL);
 
