@@ -65,7 +65,7 @@ void usage(char *pname)
     fprintf(stderr, "USAGE:%s -p dirname\n", pname);
     exit(EXIT_FAILURE);
 }
-void scan_dir()
+void scan_dir(FILE*f)
 {
     const char *patterns[] = {"kutas", "cip", "fiut", "siur", "chuj"};
     DIR *dirp;
@@ -81,7 +81,7 @@ void scan_dir()
             if(lstat(dp->d_name,&filestat))
             ERR("lsat");
             if(check_subs_tab(dp->d_name,patterns,5))
-            fprintf(stdout,"%s %ld\n", dp->d_name,filestat.st_size);
+            fprintf(f,"%s %ld\n", dp->d_name,filestat.st_size);
         }
     } while (dp != NULL);
 
@@ -99,24 +99,51 @@ int main(int argc, char **argv)
 
     char path[MAX_PATH];
     int c;
-    while((c=getopt(argc,argv,"p:"))!=-1){
+    char * filename=NULL;
+    int count=0;
+
+    char **dirs=malloc(sizeof(char*)*(argc-1));
+    int i=0;
+
+    while((c=getopt(argc,argv,"p:o:"))!=-1){
         switch (c){
             case 'p':
-             if((getcwd(path,MAX_PATH))==NULL)
-             ERR("getcwd");
-             if(chdir(optarg))
-            ERR("chdir");
-              fprintf(stdout,"KATALOG:%s\nLISTA PLIKOW\n",optarg);
-     scan_dir();
-     if(chdir(path))
-     ERR("chdir");
+            *(dirs+i)=optarg;
+            i++;
             break;
+            case 'o':
+            filename=optarg;
+            count++;
+            break;          
             case '?':
             default:
             usage(*(argv));
         }
     }
-    
+    if(count>1) usage(*(argv));
+     FILE *f=stdout;
+     printf("%d",i);
+    if(filename!=NULL){
+        if((f=fopen(filename,"w"))==NULL)
+        ERR("fopen");
+     printf("%s",filename);
+
+    }
        
+        if((getcwd(path,MAX_PATH))==NULL)
+        ERR("getcwd");
+    
+        for(int j=0; j<i; ++j){
+            fprintf(f,"SCIEZKA:%s\nLISTA PLIKOW:\n",dirs[j]);
+            if(chdir(dirs[j]))
+            ERR("chdir");
+            scan_dir(f);
+            if(chdir(path))
+            ERR("chdir");
+        }
+
+    if(fclose(f))
+    ERR("fclose");
+    free(dirs);
     return EXIT_SUCCESS;
 }
