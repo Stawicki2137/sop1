@@ -1,19 +1,15 @@
-CC=gcc
-C_FLAGS=-Wall -g
-L_FLAGS=-fsanitize=address,undefined
+override CFLAGS=-Wall -Wextra -fanalyzer -g -O0 -fsanitize=address,undefined
 
-TARGET=siur
-FILES=${TARGET}.o
+ifdef CI
+override CFLAGS=-Wall -Wextra -Werror
+endif
 
 .PHONY: clean all
 
-${TARGET} : ${FILES}
-	${CC} ${L_FLAGS} -o ${TARGET} ${FILES}
+all: sop-dika
 
-${TARGET}.o: ${TARGET}.c
-	${CC} ${C_FLAGS} -o ${TARGET}.o -c ${TARGET}.c
-
-all: ${TARGET}
+sop-dika: sop-dika.c	
+	gcc $(CFLAGS) -o sop-dika sop-dika.c
 
 clean:
-	rm -f ${FILES} ${TARGET}
+	rm sop-dika
